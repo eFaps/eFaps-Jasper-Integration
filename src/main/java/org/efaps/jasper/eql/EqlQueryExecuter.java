@@ -100,7 +100,9 @@ public class EqlQueryExecuter
             final Map<String, Object> map = new HashMap<>();
             list.add(map);
             for (final AbstractValue<?> value : val.getValues()) {
-                map.put(value.getKey(), value.getValue());
+                if (value != null) {
+                    map.put(value.getKey(), value.getValue());
+                }
             }
         }
         final JRMapCollectionDataSource ret = new JRMapCollectionDataSource(list);

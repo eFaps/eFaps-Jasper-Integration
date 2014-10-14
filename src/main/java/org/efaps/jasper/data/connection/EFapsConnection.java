@@ -487,8 +487,7 @@ public class EFapsConnection
             final UsernamePasswordCredentials creds = new UsernamePasswordCredentials(
                             this.dataAdapter.getUserName(), _password);
             final CredentialsProvider credsProvider = new BasicCredentialsProvider();
-            credsProvider.setCredentials(new AuthScope("localhost",
-                            AuthScope.ANY_PORT), creds);
+            credsProvider.setCredentials(new AuthScope(null, AuthScope.ANY_PORT), creds);
             final HttpClientContext context = HttpClientContext.create();
             context.setCredentialsProvider(credsProvider);
 
