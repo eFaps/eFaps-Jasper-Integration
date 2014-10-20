@@ -24,6 +24,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import net.sf.jasperreports.data.AbstractDataAdapterService;
 import net.sf.jasperreports.engine.JRDataSource;
@@ -62,6 +65,21 @@ public class EqlQueryExecuter
     private String password;
 
     /**
+     * Pattern for getting the Parameter including there special symbols.
+     */
+    private final Pattern parameterPattern = Pattern.compile("\\$P!\\{[a-z,A-Z,1-9,_,-]*\\}");
+
+    /**
+     * Pattern for getting the key of the Parameter.
+     */
+    private final Pattern keyPattern = Pattern.compile("(?<=\\{)([a-z,A-Z,1-9,_,-]*?)(?=\\})");
+
+    /**
+     * Map of value parameters.
+     */
+    private final Map<String, ? extends JRValueParameter> parameters;
+
+    /**
      * The statement used to fire the query.
      */
     public EqlQueryExecuter(final JasperReportsContext _jContext,
@@ -70,6 +88,7 @@ public class EqlQueryExecuter
     {
         this.connection = (EFapsConnection) _parameters.get(JRParameter.REPORT_CONNECTION).getValue();
         this.dataset = _dataset;
+        this.parameters =_parameters;
         for (final SecretsProviderFactory secFac : _jContext.getExtensions(SecretsProviderFactory.class)) {
             final SecretsProvider provider = secFac.getSecretsProvider(AbstractDataAdapterService.SECRETS_CATEGORY);
             if (provider != null) {
@@ -95,7 +114,7 @@ public class EqlQueryExecuter
         final List<Map<String, ?>> list = new ArrayList<>();
 
         final String stmtStr = this.dataset.getQuery().getText();
-        final DataList dataList = this.connection.executeQuery(stmtStr, this.password);
+        final DataList dataList = this.connection.executeQuery(replaceParameters(stmtStr), this.password);
         for (final ObjectData val : dataList) {
             final Map<String, Object> map = new HashMap<>();
             list.add(map);
@@ -138,5 +157,79 @@ public class EqlQueryExecuter
         throws JRException
     {
         return false;
+    }
+
+    /**
+     * Getter method for the instance variable {@link #parameters}.
+     *
+     * @return value of instance variable {@link #parameters}
+     */
+    public Map<String, ? extends JRValueParameter> getParameters()
+    {
+        return this.parameters;
+    }
+
+    /**
+     * @param _stmtStr stamentStr the parameters will be replace for
+     * @return stmt
+     */
+    protected String replaceParameters(final String _stmtStr)
+    {
+        final Pattern mainPattern = getParameterPattern();
+        final Pattern subPattern = getKeyPattern();
+        final Matcher matcher = mainPattern.matcher(_stmtStr);
+        final Map<String, String> replaceMap = new HashMap<>();
+        while (matcher.find()) {
+            final String mainStr = matcher.group();
+            final Matcher subMatcher = subPattern.matcher(mainStr);
+            subMatcher.find();
+            replaceMap.put(mainStr, getStringValue(_stmtStr, subMatcher.group()));
+        }
+        String ret = _stmtStr;
+        for (final Entry<String, String> entry  :replaceMap.entrySet()) {
+            ret = ret.replace(entry.getKey(), entry.getValue());
+        }
+        return ret;
+    }
+
+    /**
+     * @param _stmtStr stamentStr the parameters will be replace for
+     * @param _key key the value will bee searched for
+     * @return String representation of the object
+     */
+    protected String getStringValue(final String _stmtStr,
+                                    final String _key)
+    {
+        String ret = "";
+        if (_key != null) {
+            final JRValueParameter parameter = getParameters().get(_key);
+            if (parameter != null) {
+                final Object object = parameter.getValue();
+                if (object != null) {
+                    ret = object.toString();
+                }
+            }
+        }
+        return ret;
+    }
+
+    /**
+     * Getter method for the instance variable {@link #pattern}.
+     *
+     * @return value of instance variable {@link #pattern}
+     */
+    protected Pattern getParameterPattern()
+    {
+        return this.parameterPattern;
+    }
+
+    /**
+     * Getter method for the instance variable {@link #keyPattern}.
+     *
+     * @return value of instance variable {@link #keyPattern}
+     */
+    protected Pattern getKeyPattern()
+    {
+        return this.keyPattern;
     }
 }
