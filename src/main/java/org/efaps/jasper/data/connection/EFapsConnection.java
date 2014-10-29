@@ -57,7 +57,6 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.efaps.jasper.data.EFapsDataAdapter;
-import org.efaps.jasper.data.EFapsDataAdapterImpl;
 import org.efaps.json.data.DataList;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -523,15 +522,6 @@ public class EFapsConnection
         }
         return ret;
     }
-
-    public static void main(final String... op)
-    {
-        final EFapsDataAdapter dat = new EFapsDataAdapterImpl();
-        dat.setUserName("Administrator");
-        final EFapsConnection von = new EFapsConnection(dat);
-        von.executeQuery("asda", "Administrator");
-    }
-
 
     /**
      * Getter method for the instance variable {@link #dataAdapter}.

@@ -44,10 +44,16 @@ import org.efaps.jasper.data.connection.EFapsConnection;
 import org.efaps.json.data.AbstractValue;
 import org.efaps.json.data.DataList;
 import org.efaps.json.data.ObjectData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EqlQueryExecuter
     implements JRQueryExecuter
 {
+    /**
+     * Logging instance used in this class.
+     */
+    private static final Logger LOG = LoggerFactory.getLogger(EqlQueryExecuter.class);
 
     /**
      * Connection for this Executer.
@@ -112,15 +118,18 @@ public class EqlQueryExecuter
         throws JRException
     {
         final List<Map<String, ?>> list = new ArrayList<>();
-
         final String stmtStr = this.dataset.getQuery().getText();
         final DataList dataList = this.connection.executeQuery(replaceParameters(stmtStr), this.password);
-        for (final ObjectData val : dataList) {
-            final Map<String, Object> map = new HashMap<>();
-            list.add(map);
-            for (final AbstractValue<?> value : val.getValues()) {
-                if (value != null) {
-                    map.put(value.getKey(), value.getValue());
+        if (dataList == null) {
+            LOG.error("No datalist recieved");
+        } else {
+            for (final ObjectData val : dataList) {
+                final Map<String, Object> map = new HashMap<>();
+                list.add(map);
+                for (final AbstractValue<?> value : val.getValues()) {
+                    if (value != null) {
+                        map.put(value.getKey(), value.getValue());
+                    }
                 }
             }
         }
