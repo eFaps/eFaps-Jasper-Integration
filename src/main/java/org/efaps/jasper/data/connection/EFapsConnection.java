@@ -23,6 +23,7 @@ package org.efaps.jasper.data.connection;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URISyntaxException;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -38,24 +39,20 @@ import java.sql.SQLXML;
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
 import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.message.BasicNameValuePair;
 import org.efaps.jasper.data.EFapsDataAdapter;
 import org.efaps.json.data.DataList;
 
@@ -476,13 +473,13 @@ public class EFapsConnection
         DataList ret = null;
         try {
             final HttpClientBuilder httpClient = HttpClientBuilder.create();
-            final HttpPost postRequest = new HttpPost(this.dataAdapter.getUrl() + "/eql/query");
-            final NameValuePair paier = new BasicNameValuePair("stmt", _stmtStr);
 
-            final List<NameValuePair> postParams = new ArrayList<>();
-            postParams.add(paier);
-            postRequest.setEntity(new UrlEncodedFormEntity(postParams));
-            postRequest.addHeader("accept", "application/json");
+            final URIBuilder builder = new URIBuilder(this.dataAdapter.getUrl() + "/eql/print")
+                .addParameter("origin", "Jasper-Integration").addParameter("stmt", _stmtStr);
+
+            final HttpGet getRequest = new HttpGet(builder.build());
+
+            getRequest.addHeader("accept", "application/json");
             final UsernamePasswordCredentials creds = new UsernamePasswordCredentials(
                             this.dataAdapter.getUserName(), _password);
             final CredentialsProvider credsProvider = new BasicCredentialsProvider();
@@ -490,8 +487,7 @@ public class EFapsConnection
             final HttpClientContext context = HttpClientContext.create();
             context.setCredentialsProvider(credsProvider);
 
-            final HttpResponse response = httpClient.build().execute(postRequest,
-                            context);
+            final HttpResponse response = httpClient.build().execute(getRequest, context);
 
             if (response.getStatusLine().getStatusCode() != 200) {
                 throw new RuntimeException("Failed : HTTP error code : "
@@ -517,6 +513,9 @@ public class EFapsConnection
             // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (final IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (final URISyntaxException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
