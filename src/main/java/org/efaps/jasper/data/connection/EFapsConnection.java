@@ -56,7 +56,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.efaps.jasper.data.EFapsDataAdapter;
 import org.efaps.json.data.DataList;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
@@ -500,11 +499,10 @@ public class EFapsConnection
             final ObjectMapper mapper = new ObjectMapper();
             mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS,
                             false);
-            mapper.configure(DeserializationFeature.UNWRAP_ROOT_VALUE, true);
             mapper.registerModule(new JodaModule());
 
             ret = mapper.readValue(br, DataList.class);
-            System.out.println(ret);
+            //System.out.println(ret);
 
         } catch (final ClientProtocolException e) {
             // TODO Auto-generated catch block
